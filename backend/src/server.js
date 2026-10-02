@@ -1,8 +1,4 @@
 import "./config/env.js";
-import fs from "fs";
-
-
-
 
 import app from "./app.js";
 import connectDB from "./config/db.js";
