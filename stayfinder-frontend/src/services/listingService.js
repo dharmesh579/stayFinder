@@ -5,8 +5,8 @@ export const createListing = async (formData) => {
   return response.data;
 };
 
-export const getAllListings = async () => {
-  const response = await api.get("/listings");
+export const getAllListings = async (params = {}) => {
+  const response = await api.get("/listings", { params });
   return response.data;
 };
 

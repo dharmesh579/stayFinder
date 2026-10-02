@@ -1,28 +1,54 @@
-import Button from "./Button.jsx";
+import { useNavigate } from "react-router-dom";
+import heroImage from "../assets/hero-house.jpg";
+
 function Hero() {
+  const navigate = useNavigate();
+
+  const scrollToListings = () => {
+    document
+      .getElementById("listings")
+      ?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <section className="max-w-7xl mx-auto px-6 py-16">
-      <div className="flex flex-col md:flex-row items-center justify-between">
-        <div>
-          <h1 className="text-5xl font-bold leading-tight">
-            Find Your Perfect Stay
-          </h1>
-          <p className="mt-6 text-lg text-gray-600">
-            Discover apartments,villas,hotels and PGs across india with ease
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row gap-4">
-            <Button>Explore Properties</Button>
-            <button className="border border-blue-600 text-blue-600 px-6 py-3 rounded-lg hover:bg-blue-50 transition">
-              Become a host
-            </button>
-          </div>
-        </div>
-        <div className="mt-10 md:mt-0 md:w-1/2 flex justify-center">
-          <img
-            src="https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=500&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8bHV4dXJ5JTIwaG91c2V8ZW58MHx8MHx8fDA%3D"
-            alt="Luxury House"
-            className="w-full max-w-lg rounded-2xl shadow-xl"
-          />
+    <section className="relative min-h-[560px] flex items-center">
+      {/* Background image + dark overlay */}
+      <img
+        src={heroImage}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-black/20" />
+
+      {/* Content */}
+      <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-36 w-full">
+        <span className="inline-block bg-white/15 backdrop-blur text-white text-sm font-medium px-4 py-1.5 rounded-full border border-white/30">
+          Apartments · Villas · Hotels · Farmhouses
+        </span>
+
+        <h1 className="mt-6 text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight max-w-3xl">
+          Find a place that feels like <span className="text-blue-400">home</span>,
+          wherever you go
+        </h1>
+
+        <p className="mt-5 text-lg text-gray-200 max-w-xl">
+          Discover and book stays across India, or become a host and start
+          earning from your own property.
+        </p>
+
+        <div className="mt-8 flex flex-col sm:flex-row gap-4">
+          <button
+            onClick={scrollToListings}
+            className="bg-blue-600 text-white px-7 py-3 rounded-lg font-semibold hover:bg-blue-700 transition cursor-pointer"
+          >
+            Explore Properties
+          </button>
+          <button
+            onClick={() => navigate("/create-listing")}
+            className="border border-white text-white px-7 py-3 rounded-lg font-semibold hover:bg-white hover:text-gray-900 transition cursor-pointer"
+          >
+            Become a Host
+          </button>
         </div>
       </div>
     </section>

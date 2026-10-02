@@ -10,6 +10,10 @@ import ListingDetails from "../pages/ListingDetails.jsx";
 import CreateListing from "../pages/CreateListing.jsx";
 import NotFound from "../pages/NotFound.jsx";
 import EditListing from "../pages/EditListings.jsx";
+import MyBookings from "../pages/MyBookings.jsx";
+import HostBookings from "../pages/HostBookings.jsx";
+import Wishlist from "../pages/Wishlist.jsx";
+import ProtectedRoute from "../components/ProtectedRoute.jsx";
 
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
@@ -21,34 +25,21 @@ const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
+      { path: "/", element: <Home /> },
+      { path: "/listing/:id", element: <ListingDetails /> },
       {
-        path: "/",
-        element: <Home />,
+        element: <ProtectedRoute />,
+        children: [
+          { path: "/profile", element: <Profile /> },
+          { path: "/my-listings", element: <MyListings /> },
+          { path: "/create-listing", element: <CreateListing /> },
+          { path: "/edit-listing/:id", element: <EditListing /> },
+          { path: "/my-bookings", element: <MyBookings /> },
+          { path: "/booking-requests", element: <HostBookings /> },
+          { path: "/wishlist", element: <Wishlist /> },
+        ],
       },
-      {
-        path: "/profile",
-        element: <Profile />,
-      },
-      {
-        path: "/my-listings",
-        element: <MyListings />,
-      },
-      {
-        path: "/create-listing",
-        element: <CreateListing />,
-      },
-      {
-        path: "/listing/:id",
-        element: <ListingDetails />,
-      },
-      {
-        path: "*",
-        element: <NotFound />,
-      },
-      {
-        path: "/edit-listing/:id",
-        element: <EditListing />,
-      },
+      { path: "*", element: <NotFound /> },
     ],
   },
 

@@ -1,76 +1,127 @@
 import { useState } from "react";
 
-function SearchBar() {
-  const [location, setLocation] = useState("");
-  const [propertyType, setPropertyType] = useState("");
-  const [budget, setBudget] = useState(0);
+const CATEGORIES = [
+  "Apartment",
+  "Villa",
+  "Cabin",
+  "Hotel",
+  "Resort",
+  "Beach",
+  "Mountain",
+  "Camping",
+  "Farmhouse",
+  "Treehouse",
+];
 
-  const handleSearch = () => {
-    console.log({ location, propertyType, budget });
+function SearchBar({ onSearch }) {
+  const [location, setLocation] = useState("");
+  const [category, setCategory] = useState("");
+  const [maxPrice, setMaxPrice] = useState("");
+  const [sort, setSort] = useState("newest");
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSearch?.({ location, category, maxPrice, sort });
   };
 
+  const handleReset = () => {
+    setLocation("");
+    setCategory("");
+    setMaxPrice("");
+    setSort("newest");
+    onSearch?.({ location: "", category: "", maxPrice: "", sort: "newest" });
+  };
+
+  const inputStyle =
+    "w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
   return (
-    <section className="max-w-7xl mx-auto px-6 py-10 ">
-      <div className="bg-white border border-gray-300 shadow-lg rounded-xl p-6 flex flex-col lg:flex-row gap-4">
-        <div className="flex-1">
+    <section id="search" className="max-w-7xl mx-auto px-6 py-10">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white border border-gray-300 shadow-lg rounded-xl p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end"
+      >
+        <div>
           <label htmlFor="location" className="block text-sm font-medium mb-2">
-            Loction
+            Location
           </label>
           <input
             id="location"
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
-            placeholder="Enter city"
-            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="City, country or name"
+            className={inputStyle}
           />
         </div>
-        <div className="flex-1">
-          <label
-            htmlFor="propertyType"
-            className="block text-sm font-medium mb-2"
-          >
+
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium mb-2">
             Property Type
           </label>
           <select
-            id="propertyType"
-            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            value={propertyType}
-            onChange={(e) => setPropertyType(e.target.value)}
+            id="category"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className={`${inputStyle} cursor-pointer`}
           >
-            <option value="">Select Property</option>
-            <option value="Apartment">Apartment</option>
-            <option value="Villa">Villa</option>
-            <option value="PG">PG</option>
-            <option value="House">House</option>
+            <option value="">All types</option>
+            {CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
           </select>
         </div>
-        <div className="flex-1">
-          <label htmlFor="budget" className="block text-sm font-medium mb-2">
-            Budget
+
+        <div>
+          <label htmlFor="maxPrice" className="block text-sm font-medium mb-2">
+            Max price / night (₹)
           </label>
           <input
+            id="maxPrice"
             type="number"
             min={0}
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            placeholder="10000"
-            id="budget"
-            className="w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            value={maxPrice}
+            onChange={(e) => setMaxPrice(e.target.value)}
+            placeholder="e.g. 5000"
+            className={inputStyle}
           />
         </div>
-        <div className="flex-1">
-          <label className="block text-sm font-medium mb-2 opacity-0 ">
-            Search
+
+        <div>
+          <label htmlFor="sort" className="block text-sm font-medium mb-2">
+            Sort by
           </label>
+          <select
+            id="sort"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            className={`${inputStyle} cursor-pointer`}
+          >
+            <option value="newest">Newest</option>
+            <option value="price_asc">Price: low to high</option>
+            <option value="price_desc">Price: high to low</option>
+            <option value="rating">Top rated</option>
+          </select>
+        </div>
+
+        <div className="flex gap-2">
           <button
-            onClick={handleSearch}
-            className="w-full h-12 cursor-pointer bg-blue-600 text-white px-6 rounded-lg hover:bg-blue-700 transition"
+            type="submit"
+            className="flex-1 h-12 cursor-pointer bg-blue-600 text-white px-6 rounded-lg hover:bg-blue-700 transition"
           >
             Search
           </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="h-12 cursor-pointer border border-gray-300 px-4 rounded-lg hover:bg-gray-100 transition"
+          >
+            Reset
+          </button>
         </div>
-      </div>
+      </form>
     </section>
   );
 }

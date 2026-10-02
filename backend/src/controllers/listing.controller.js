@@ -23,7 +23,7 @@ export const createListingController = asyncHandler(async (req, res) => {
 });
 
 export const getAllListingsController = asyncHandler(async (req, res) => {
-  const listings = await getAllListingsService();
+  const listings = await getAllListingsService(req.query);
 
   return res
     .status(200)

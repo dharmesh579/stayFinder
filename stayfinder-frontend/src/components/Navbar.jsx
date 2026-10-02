@@ -43,6 +43,15 @@ function Navbar() {
               <NavLink to="/create-listing" className={navLinkStyle}>
                 Create Listing
               </NavLink>
+              <NavLink to="/my-bookings" className={navLinkStyle}>
+                My Bookings
+              </NavLink>
+              <NavLink to="/booking-requests" className={navLinkStyle}>
+                Requests
+              </NavLink>
+              <NavLink to="/wishlist" className={navLinkStyle}>
+                Wishlist
+              </NavLink>
             </>
           )}
         </div>
@@ -105,6 +114,27 @@ function Navbar() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Create Listings
+              </NavLink>
+              <NavLink
+                to="/my-bookings"
+                className={navLinkStyle}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                My Bookings
+              </NavLink>
+              <NavLink
+                to="/booking-requests"
+                className={navLinkStyle}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Booking Requests
+              </NavLink>
+              <NavLink
+                to="/wishlist"
+                className={navLinkStyle}
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Wishlist
               </NavLink>
               <NavLink
                 to="/profile"

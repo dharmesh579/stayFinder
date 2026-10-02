@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   FaMapMarkerAlt,
@@ -19,10 +19,16 @@ import {
 } from "react-icons/fa";
 
 import { getListingById } from "../services/listingService";
+import { createBooking, getBookedDates } from "../services/bookingService";
+import { toggleWishlist } from "../services/wishlistService";
+import { useAuth } from "../context/useAuth";
+import Reviews from "../components/Reviews";
 import Loading from "../components/Loading";
 
 function ListingDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user, setUser } = useAuth();
 
   const [listing, setListing] = useState({});
   const [loading, setLoading] = useState(true);
@@ -31,6 +37,10 @@ function ListingDetails() {
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(1);
+  const [bookedDates, setBookedDates] = useState([]);
+  const [reserving, setReserving] = useState(false);
+  const [bookingError, setBookingError] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
 
   // Gallery state
   const [selectedImage, setSelectedImage] = useState(0);
@@ -52,6 +62,28 @@ function ListingDetails() {
     };
 
     fetchListing();
+  }, [id]);
+
+  const refreshListing = async () => {
+    try {
+      const response = await getListingById(id);
+      setListing(response.data);
+    } catch {
+      // keep showing the current data
+    }
+  };
+
+  useEffect(() => {
+    const fetchBookedDates = async () => {
+      try {
+        const response = await getBookedDates(id);
+        setBookedDates(response.data);
+      } catch {
+        setBookedDates([]);
+      }
+    };
+
+    fetchBookedDates();
   }, [id]);
 
   // Create one array containing main image + gallery images
@@ -106,25 +138,88 @@ function ListingDetails() {
 
   const totalPrice = nights * (listing.price || 0);
 
-  const handleReserve = () => {
+  const today = new Date().toISOString().split("T")[0];
+
+  const minCheckOut = checkIn
+    ? new Date(new Date(checkIn).getTime() + 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0]
+    : today;
+
+  const datesConflict =
+    nights > 0 &&
+    bookedDates.some(
+      (b) => new Date(checkIn) < new Date(b.checkOut) && new Date(checkOut) > new Date(b.checkIn),
+    );
+
+  const userId = user?._id || user?.id;
+  const isOwner = Boolean(userId && listing.owner?._id === userId);
+  const isSaved = Boolean(user?.wishlist?.includes(listing._id));
+
+  const handleReserve = async () => {
+    setBookingError("");
+
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+
     if (!checkIn || !checkOut) {
-      alert("Please select check-in and check-out dates.");
+      setBookingError("Please select check-in and check-out dates.");
       return;
     }
 
     if (nights <= 0) {
-      alert("Check-out date must be after check-in date.");
+      setBookingError("Check-out date must be after check-in date.");
       return;
     }
 
-    console.log({
-      listingId: listing._id,
-      checkIn,
-      checkOut,
-      guests,
-      nights,
-      totalPrice,
-    });
+    if (datesConflict) {
+      setBookingError("Those dates are already booked. Please choose others.");
+      return;
+    }
+
+    setReserving(true);
+    try {
+      await createBooking(listing._id, { checkIn, checkOut, guests });
+      navigate("/my-bookings");
+    } catch (err) {
+      setBookingError(
+        err.response?.data?.errors?.[0]?.message ||
+          err.response?.data?.message ||
+          "Could not create booking. Please try again.",
+      );
+    } finally {
+      setReserving(false);
+    }
+  };
+
+  const handleSave = async () => {
+    if (!user) {
+      navigate("/login");
+      return;
+    }
+    try {
+      const response = await toggleWishlist(listing._id);
+      setUser({ ...user, wishlist: response.data.wishlist });
+    } catch (err) {
+      alert(err.response?.data?.message || "Could not update wishlist");
+    }
+  };
+
+  const handleShare = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: listing.title, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        setShareMessage("Link copied!");
+        setTimeout(() => setShareMessage(""), 2000);
+      }
+    } catch {
+      // share dialog dismissed
+    }
   };
 
   if (loading) {
@@ -188,18 +283,20 @@ function ListingDetails() {
           <div className="flex gap-3">
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 transition"
+              onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 transition cursor-pointer"
             >
               <FaShareAlt />
-              Share
+              {shareMessage || "Share"}
             </button>
 
             <button
               type="button"
-              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 transition"
+              onClick={handleSave}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 bg-white hover:bg-gray-100 transition cursor-pointer"
             >
-              <FaHeart />
-              Save
+              <FaHeart className={isSaved ? "text-red-500" : "text-gray-400"} />
+              {isSaved ? "Saved" : "Save"}
             </button>
           </div>
         </div>
@@ -434,6 +531,14 @@ function ListingDetails() {
                 </div>
               </div>
             </section>
+
+            {/* REVIEWS */}
+
+            <Reviews
+              listingId={id}
+              ownerId={listing.owner?._id}
+              onChange={refreshListing}
+            />
           </div>
 
           {/* BOOKING CARD */}
@@ -481,7 +586,14 @@ function ListingDetails() {
                       <input
                         type="date"
                         value={checkIn}
-                        onChange={(e) => setCheckIn(e.target.value)}
+                        min={today}
+                        onChange={(e) => {
+                          setCheckIn(e.target.value);
+                          setBookingError("");
+                          if (checkOut && e.target.value >= checkOut) {
+                            setCheckOut("");
+                          }
+                        }}
                         className="w-full text-sm outline-none bg-transparent"
                       />
                     </div>
@@ -498,7 +610,11 @@ function ListingDetails() {
                       <input
                         type="date"
                         value={checkOut}
-                        onChange={(e) => setCheckOut(e.target.value)}
+                        min={minCheckOut}
+                        onChange={(e) => {
+                          setCheckOut(e.target.value);
+                          setBookingError("");
+                        }}
                         className="w-full text-sm outline-none bg-transparent"
                       />
                     </div>
@@ -532,7 +648,7 @@ function ListingDetails() {
                 <div className="border-t border-gray-200 mt-6 pt-5">
                   <div className="flex justify-between text-gray-600 mb-3">
                     <span>
-                      ₹{listing.price} × {nights} nights
+                      ₹{listing.price} × {nights} {nights === 1 ? "night" : "nights"}
                     </span>
 
                     <span>₹{totalPrice}</span>
@@ -548,22 +664,45 @@ function ListingDetails() {
 
               {/* RESERVE */}
 
-              <button
-                type="button"
-                onClick={handleReserve}
-                disabled={!listing.isAvailable}
-                className={`w-full mt-6 py-3.5 rounded-xl font-bold text-lg transition ${
-                  listing.isAvailable
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                {listing.isAvailable ? "Reserve Now" : "Currently Unavailable"}
-              </button>
+              {datesConflict && (
+                <p className="mt-4 text-sm text-red-600">
+                  These dates are already booked.
+                </p>
+              )}
 
-              {listing.isAvailable && (
+              {bookingError && (
+                <p className="mt-4 text-sm text-red-600">{bookingError}</p>
+              )}
+
+              {isOwner ? (
+                <Link
+                  to={`/edit-listing/${listing._id}`}
+                  className="block text-center w-full mt-6 py-3.5 rounded-xl font-bold text-lg bg-gray-800 text-white hover:bg-gray-900 transition"
+                >
+                  This is your listing - Edit
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleReserve}
+                  disabled={!listing.isAvailable || reserving || datesConflict}
+                  className={`w-full mt-6 py-3.5 rounded-xl font-bold text-lg transition ${
+                    listing.isAvailable && !datesConflict
+                      ? "bg-blue-600 text-white hover:bg-blue-700 cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}
+                >
+                  {!listing.isAvailable
+                    ? "Currently Unavailable"
+                    : reserving
+                      ? "Sending request..."
+                      : "Reserve Now"}
+                </button>
+              )}
+
+              {listing.isAvailable && !isOwner && (
                 <p className="text-center text-sm text-gray-500 mt-3">
-                  You won't be charged yet.
+                  You won't be charged yet. The host will confirm your request.
                 </p>
               )}
             </div>

@@ -46,7 +46,7 @@ function Profile() {
         <div className="flex justify-center">
           <img
             src={
-              user.profilePhoto ||
+              user.avatar ||
               "https://ui-avatars.com/api/?name=User&background=2563eb&color=fff"
             }
             alt="Profile"

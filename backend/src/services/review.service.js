@@ -10,6 +10,10 @@ export const createReviewService = async (listingId, userId, reviewData) => {
     throw new ApiError(404, "Listing not found");
   }
 
+  if (listing.owner.toString() === userId.toString()) {
+    throw new ApiError(400, "You cannot review your own listing");
+  }
+
   // 2. Check if user already reviewed this listing
   const existingReview = await Review.findOne({
     listing: listingId,
